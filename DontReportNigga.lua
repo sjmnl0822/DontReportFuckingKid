@@ -14,6 +14,7 @@ local autoFireEnabled = false -- 단발 발사 기능 상태
 
 -- FOV 원 그리기
 local fovCircle = Drawing.new("Circle")
+
 fovCircle.Color = Color3.fromRGB(255, 255, 255)
 fovCircle.Thickness = 1
 fovCircle.NumSides = 50
@@ -28,7 +29,7 @@ end
 local function getClosestPlayerToMouse()
     local closestPlayer = nil
     local shortestDistance = math.huge
-    local mousePosition = UserInputService:GetMouseLocation()
+    local centerPosition = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
@@ -40,7 +41,7 @@ local function getClosestPlayerToMouse()
                 local headPosition, onScreen = camera:WorldToViewportPoint(head.Position)
                 if onScreen then
                     local screenPosition = Vector2.new(headPosition.X, headPosition.Y)
-                    local cursorDistance = (screenPosition - mousePosition).Magnitude
+                    local cursorDistance = (screenPosition - centerPosition).Magnitude
 
                     -- ✅ FOV 범위 내의 플레이어만 감지
                     if cursorDistance < FOV_RADIUS and cursorDistance < shortestDistance then
@@ -91,10 +92,9 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- FOV 원 위치 업데이트 (사라지지 않도록 보장)
+    -- FOV 원 위치를 화면 중앙에 고정
     if fovCircle then
-        local mousePosition = UserInputService:GetMouseLocation()
-        fovCircle.Position = mousePosition
+        fovCircle.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
         fovCircle.Visible = true -- 클릭 시 사라지는 문제 방지
     end
 end)
