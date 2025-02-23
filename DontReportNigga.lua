@@ -12,6 +12,7 @@ local MAX_DISTANCE = 2000 -- 조준 거리 제한
 local FOV_RADIUS_BODY = 100 -- 몸통 FOV 크기
 local FOV_RADIUS_HEAD = 55.5 -- 머리 FOV 크기
 local autoFireEnabled = false -- 단발 발사 기능 상태
+local fovMultiplier = 1 -- FOV 배율
 
 -- 몸통 조준 FOV 원
 local fovCircle = Drawing.new("Circle")
@@ -57,13 +58,13 @@ local function getClosestPlayer()
                             local partScreenPos = Vector2.new(partPosition.X, partPosition.Y)
                             local partCursorDistance = (partScreenPos - centerPosition).Magnitude
                             
-                            if partCursorDistance < FOV_RADIUS_HEAD and partCursorDistance < shortestDistanceHead then
+                            if partCursorDistance < (FOV_RADIUS_HEAD * fovMultiplier) and partCursorDistance < shortestDistanceHead then
                                 closestHead = player
                                 shortestDistanceHead = partCursorDistance
                             end
                             
-                            if partCursorDistance < FOV_RADIUS_BODY and partCursorDistance < shortestDistanceBody then
-                                local fullBodyInside = partCursorDistance + (rootPart.Size.Magnitude / 2) < FOV_RADIUS_BODY
+                            if partCursorDistance < (FOV_RADIUS_BODY * fovMultiplier) and partCursorDistance < shortestDistanceBody then
+                                local fullBodyInside = partCursorDistance + (rootPart.Size.Magnitude / 2) < (FOV_RADIUS_BODY * fovMultiplier)
                                 if fullBodyInside then
                                     closestBody = player
                                     shortestDistanceBody = partCursorDistance
@@ -93,6 +94,14 @@ UserInputService.InputBegan:Connect(function(input, isProcessed)
         if not isLobbyVisible() and autoFireEnabled then
             mouse1click()
         end
+    elseif input.UserInputType == Enum.UserInputType.MouseButton2 then -- 우클릭 감지
+        fovMultiplier = 2.5
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then -- 우클릭 해제 시 원래 크기로
+        fovMultiplier = 1
     end
 end)
 
@@ -110,10 +119,12 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- FOV 원 위치를 화면 중앙에 고정
+    -- FOV 원 크기 적용 및 위치를 화면 중앙에 고정
+    fovCircle.Radius = FOV_RADIUS_BODY * fovMultiplier
     fovCircle.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     fovCircle.Visible = true
     
+    fovHeadCircle.Radius = FOV_RADIUS_HEAD * fovMultiplier
     fovHeadCircle.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     fovHeadCircle.Visible = true
 end)
